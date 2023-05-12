@@ -24,9 +24,9 @@ export default {
       <div class="point" title="Fluency">{{ totalF }}</div>
     </div>
     <div class="title">
-      <div>Sentence</div>
-      <div></div>
-      <div>Correction</div>
+      <div>NOTE</div>
+      <div>CATEGORIES</div>
+      <div>HINTS</div>
     </div>
     <SheetLine v-for="line in lines" :key="line" />
   </div>
@@ -59,14 +59,15 @@ export default {
   display: grid;
   grid-gap: var(--space-1);
   grid-template-columns:
-    auto calc(calc(var(--space-7) * 4) + calc(var(--space-1) * 4))
-    auto;
+    1fr calc(calc(var(--space-7) * 4) + calc(var(--space-1) * 3))
+    1fr;
   padding-bottom: var(--space-1);
 
   div {
     padding-left: var(--space-1);
     color: var(--neutral500);
     font-weight: bold;
+    font-size: 10px;
   }
 }
 </style>

@@ -18,8 +18,8 @@ export default {};
   display: grid;
   grid-gap: var(--space-1);
   grid-template-columns:
-    auto var(--space-7) var(--space-7) var(--space-7) var(--space-7)
-    auto;
+    1fr var(--space-7) var(--space-7) var(--space-7) var(--space-7)
+    1fr;
   padding-bottom: var(--space-1);
 }
 
