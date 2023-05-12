@@ -1,5 +1,9 @@
 <script lang="ts">
 export default {
+  props: {
+    lines: Number,
+    line: Number,
+  },
   data() {
     return {
       lGrammar: "G",
@@ -32,7 +36,16 @@ export default {
       }
 
       clicked = !clicked;
+
       this.$emit("clicked", [category, clicked]);
+    },
+    verifyLine(event: Event) {
+      /** only apply rule in the last line on the sheet */
+      if (this.line === this.lines) {
+        const hasValue = (<HTMLInputElement>event.target).value !== "";
+
+        this.$emit("new-line", hasValue);
+      }
     },
   },
 };
@@ -40,7 +53,7 @@ export default {
 
 <template>
   <div class="line">
-    <input type="text" class="input" />
+    <input type="text" class="input" @input="verifyLine" />
     <button
       class="button"
       :class="{ clicked: bGrammar }"

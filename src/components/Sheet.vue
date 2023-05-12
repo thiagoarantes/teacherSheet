@@ -5,14 +5,18 @@ export default {
   components: { SheetLine },
   data() {
     return {
+      lines: 1,
+      score: 2.5,
       totalG: 0,
       totalV: 0,
       totalP: 0,
       totalF: 0,
-      lines: [1, 2, 3, 4, 5],
     };
   },
   methods: {
+    addNewLine(isAddingNewLine: boolean): void {
+      isAddingNewLine && this.lines++;
+    },
     onChildClick([category, clicked]: [string, boolean]): void {
       switch (category) {
         case "G":
@@ -30,6 +34,36 @@ export default {
         default:
           break;
       }
+
+      this.updateScore();
+    },
+    updateScore(): void {
+      const totalPoints = this.totalG + this.totalV + this.totalP + this.totalF;
+
+      switch (totalPoints) {
+        case 0:
+          this.score = 2.5;
+          break;
+        case 1:
+        case 2:
+          this.score = 2.0;
+          break;
+        case 3:
+        case 4:
+          this.score = 1.5;
+          break;
+        case 5:
+        case 6:
+          this.score = 1.0;
+          break;
+        case 7:
+        case 8:
+          this.score = 0.5;
+          break;
+        default:
+          this.score = 0.25;
+          break;
+      }
     },
   },
 };
@@ -37,6 +71,7 @@ export default {
 
 <template>
   <div class="sheet">
+    <div class="score">Score: {{ score }}</div>
     <div class="points">
       <div class="point" title="Grammar">{{ totalG }}</div>
       <div class="point" title="Vocabulary">{{ totalV }}</div>
@@ -48,7 +83,14 @@ export default {
       <div>CATEGORIES</div>
       <div>HINTS</div>
     </div>
-    <SheetLine v-for="line in lines" :key="line" @clicked="onChildClick" />
+    <SheetLine
+      v-for="index in lines"
+      :lines="lines"
+      :line="index"
+      :key="index"
+      @clicked="onChildClick"
+      @new-line="addNewLine"
+    />
   </div>
 </template>
 
@@ -57,12 +99,23 @@ export default {
   padding: calc(var(--space-7) + var(--space-2)) var(--space-2) var(--space-2);
 }
 
+.score {
+  width: 248px;
+  margin: 0 auto var(--space-1);
+  background-color: var(--neutral400);
+  border-radius: var(--space-1);
+  color: var(--neutral500);
+  font-size: 2rem;
+  padding: var(--space-1);
+  text-align: center;
+}
+
 .points {
   display: flex;
   gap: var(--space-1);
   margin: 0 auto;
   width: fit-content;
-  padding-bottom: var(--space-1);
+  padding-bottom: var(--space-3);
 
   .point {
     background-color: var(--neutral400);
