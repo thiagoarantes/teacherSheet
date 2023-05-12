@@ -5,10 +5,10 @@ export default {
   components: { SheetLine },
   data() {
     return {
-      pointsG: 0,
-      pointsV: 0,
-      pointsP: 0,
-      pointsF: 0,
+      totalG: 0,
+      totalV: 0,
+      totalP: 0,
+      totalF: 0,
       lines: [1, 2, 3, 4, 5],
     };
   },
@@ -18,10 +18,15 @@ export default {
 <template>
   <div class="sheet">
     <div class="points">
-      <div class="point">{{ pointsG }}</div>
-      <div class="point">{{ pointsV }}</div>
-      <div class="point">{{ pointsP }}</div>
-      <div class="point">{{ pointsF }}</div>
+      <div class="point" title="Grammar">{{ totalG }}</div>
+      <div class="point" title="Vocabulary">{{ totalV }}</div>
+      <div class="point" title="Pronunciation">{{ totalP }}</div>
+      <div class="point" title="Fluency">{{ totalF }}</div>
+    </div>
+    <div class="title">
+      <div>Sentence</div>
+      <div></div>
+      <div>Correction</div>
     </div>
     <SheetLine v-for="line in lines" :key="line" />
   </div>
@@ -47,6 +52,21 @@ export default {
     border-radius: var(--space-1);
     width: var(--space-7);
     text-align: center;
+  }
+}
+
+.title {
+  display: grid;
+  grid-gap: var(--space-1);
+  grid-template-columns:
+    auto calc(calc(var(--space-7) * 4) + calc(var(--space-1) * 4))
+    auto;
+  padding-bottom: var(--space-1);
+
+  div {
+    padding-left: var(--space-1);
+    color: var(--neutral500);
+    font-weight: bold;
   }
 }
 </style>

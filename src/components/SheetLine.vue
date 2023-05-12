@@ -4,12 +4,12 @@ export default {};
 
 <template>
   <div class="line">
-    <input type="text" />
-    <button>1</button>
-    <button>2</button>
-    <button>3</button>
-    <button>4</button>
-    <input type="text" />
+    <input type="text" class="input" />
+    <button class="button">G</button>
+    <button class="button">V</button>
+    <button class="button">P</button>
+    <button class="button">F</button>
+    <input type="text" class="input" />
   </div>
 </template>
 
@@ -17,9 +17,14 @@ export default {};
 .line {
   display: grid;
   grid-gap: var(--space-1);
-  grid-template-columns: auto var(--space-7) var(--space-7) var(--space-7) var(
-      --space-7
-    ) auto;
+  grid-template-columns:
+    auto var(--space-7) var(--space-7) var(--space-7) var(--space-7)
+    auto;
   padding-bottom: var(--space-1);
+}
+
+.button,
+.input {
+  padding: var(--space-1);
 }
 </style>
