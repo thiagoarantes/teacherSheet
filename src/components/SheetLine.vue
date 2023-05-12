@@ -1,14 +1,36 @@
 <script lang="ts">
-export default {};
+export default {
+  data() {
+    return {
+      lGrammar: "G",
+      lVocabulary: "V",
+      lPronunciation: "P",
+      lFluency: "F",
+    };
+  },
+  methods: {
+    onClickButton(category: string): void {
+      this.$emit("clicked", category);
+    },
+  },
+};
 </script>
 
 <template>
   <div class="line">
     <input type="text" class="input" />
-    <button class="button">G</button>
-    <button class="button">V</button>
-    <button class="button">P</button>
-    <button class="button">F</button>
+    <button class="button" @click="(_$event) => onClickButton(lGrammar)">
+      {{ lGrammar }}
+    </button>
+    <button class="button" @click="(_$event) => onClickButton(lVocabulary)">
+      {{ lVocabulary }}
+    </button>
+    <button class="button" @click="(_$event) => onClickButton(lPronunciation)">
+      {{ lPronunciation }}
+    </button>
+    <button class="button" @click="(_$event) => onClickButton(lFluency)">
+      {{ lFluency }}
+    </button>
     <input type="text" class="input" />
   </div>
 </template>

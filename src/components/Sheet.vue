@@ -12,6 +12,26 @@ export default {
       lines: [1, 2, 3, 4, 5],
     };
   },
+  methods: {
+    onChildClick(category: string): void {
+      switch (category) {
+        case "G":
+          this.totalG++;
+          break;
+        case "V":
+          this.totalV++;
+          break;
+        case "P":
+          this.totalP++;
+          break;
+        case "F":
+          this.totalF++;
+          break;
+        default:
+          break;
+      }
+    },
+  },
 };
 </script>
 
@@ -28,7 +48,7 @@ export default {
       <div>CATEGORIES</div>
       <div>HINTS</div>
     </div>
-    <SheetLine v-for="line in lines" :key="line" />
+    <SheetLine v-for="line in lines" :key="line" @clicked="onChildClick" />
   </div>
 </template>
 
