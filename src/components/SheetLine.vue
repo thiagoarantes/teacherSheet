@@ -3,7 +3,7 @@ export default {};
 </script>
 
 <template>
-  <div>
+  <div class="line">
     <input type="text" />
     <button>1</button>
     <button>2</button>
@@ -13,4 +13,13 @@ export default {};
   </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.line {
+  display: grid;
+  grid-gap: var(--space-1);
+  grid-template-columns: auto var(--space-7) var(--space-7) var(--space-7) var(
+      --space-7
+    ) auto;
+  padding-bottom: var(--space-1);
+}
+</style>

@@ -37,6 +37,7 @@ export default {
   gap: var(--space-1);
   margin: 0 auto;
   width: fit-content;
+  padding-bottom: var(--space-1);
 
   .point {
     background-color: var(--neutral400);
