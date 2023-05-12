@@ -6,11 +6,33 @@ export default {
       lVocabulary: "V",
       lPronunciation: "P",
       lFluency: "F",
+      bGrammar: false,
+      bVocabulary: false,
+      bPronunciation: false,
+      bFluency: false,
     };
   },
   methods: {
-    onClickButton(category: string): void {
-      this.$emit("clicked", category);
+    onClickButton(category: string, clicked: boolean): void {
+      switch (category) {
+        case this.lGrammar:
+          this.bGrammar = !this.bGrammar;
+          break;
+        case this.lVocabulary:
+          this.bVocabulary = !this.bVocabulary;
+          break;
+        case this.lPronunciation:
+          this.bPronunciation = !this.bPronunciation;
+          break;
+        case this.lFluency:
+          this.bFluency = !this.bFluency;
+          break;
+        default:
+          break;
+      }
+
+      clicked = !clicked;
+      this.$emit("clicked", [category, clicked]);
     },
   },
 };
@@ -19,16 +41,32 @@ export default {
 <template>
   <div class="line">
     <input type="text" class="input" />
-    <button class="button" @click="(_$event) => onClickButton(lGrammar)">
+    <button
+      class="button"
+      :class="{ clicked: bGrammar }"
+      @click="(_$event) => onClickButton(lGrammar, bGrammar)"
+    >
       {{ lGrammar }}
     </button>
-    <button class="button" @click="(_$event) => onClickButton(lVocabulary)">
+    <button
+      class="button"
+      :class="{ clicked: bVocabulary }"
+      @click="(_$event) => onClickButton(lVocabulary, bVocabulary)"
+    >
       {{ lVocabulary }}
     </button>
-    <button class="button" @click="(_$event) => onClickButton(lPronunciation)">
+    <button
+      class="button"
+      :class="{ clicked: bPronunciation }"
+      @click="(_$event) => onClickButton(lPronunciation, bPronunciation)"
+    >
       {{ lPronunciation }}
     </button>
-    <button class="button" @click="(_$event) => onClickButton(lFluency)">
+    <button
+      class="button"
+      :class="{ clicked: bFluency }"
+      @click="(_$event) => onClickButton(lFluency, bFluency)"
+    >
       {{ lFluency }}
     </button>
     <input type="text" class="input" />
@@ -48,5 +86,14 @@ export default {
 .button,
 .input {
   padding: var(--space-1);
+}
+
+.button {
+  &.clicked {
+    color: var(--primary500);
+    font-weight: bold;
+    border-color: var(--primary500);
+    background-color: var(--primary100);
+  }
 }
 </style>

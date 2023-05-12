@@ -13,19 +13,19 @@ export default {
     };
   },
   methods: {
-    onChildClick(category: string): void {
+    onChildClick([category, clicked]: [string, boolean]): void {
       switch (category) {
         case "G":
-          this.totalG++;
+          clicked ? this.totalG++ : this.totalG--;
           break;
         case "V":
-          this.totalV++;
+          clicked ? this.totalV++ : this.totalV--;
           break;
         case "P":
-          this.totalP++;
+          clicked ? this.totalP++ : this.totalP--;
           break;
         case "F":
-          this.totalF++;
+          clicked ? this.totalF++ : this.totalF--;
           break;
         default:
           break;
