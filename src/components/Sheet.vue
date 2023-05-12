@@ -44,6 +44,8 @@ export default {
     font-size: 2rem;
     padding: var(--space-1);
     border-radius: var(--space-1);
+    width: var(--space-7);
+    text-align: center;
   }
 }
 </style>
