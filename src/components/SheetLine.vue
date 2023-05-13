@@ -148,6 +148,7 @@ export default {
   padding: var(--space-1);
   border-radius: 0;
   border: 1px solid var(--neutral500);
+  line-height: 1.3rem;
 }
 
 .button {

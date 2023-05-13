@@ -122,7 +122,7 @@ export default {
 
 <style scoped lang="scss">
 .sheet {
-  padding: calc(var(--space-7) + var(--space-2)) var(--space-2) var(--space-2);
+  padding: calc(var(--space-7) + var(--space-2)) var(--space-2);
 }
 
 .header {
@@ -139,7 +139,7 @@ export default {
   background-color: var(--primary500);
   border-radius: var(--space-1);
   color: var(--neutral100);
-  font-size: 1.7rem;
+  font-size: 1.5rem;
   padding: var(--space-1);
   text-align: center;
 }
@@ -176,11 +176,12 @@ export default {
 }
 
 .footer {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   padding: var(--space-2);
+  background-color: var(--neutral100);
 
   .button {
     width: 100%;
@@ -194,6 +195,10 @@ export default {
 }
 
 @media (min-width: 769px) {
+  .sheet {
+    padding-bottom: var(--space-2);
+  }
+
   .header {
     display: block;
     height: max-content;
@@ -203,6 +208,7 @@ export default {
     display: block;
     width: 248px;
     margin: 0 auto var(--space-1);
+    font-size: 2rem;
   }
 
   .points {
