@@ -1,10 +1,12 @@
 <script lang="ts">
 import SheetLine from "./SheetLine.vue";
+import { categories } from "../utils";
 
 export default {
   components: { SheetLine },
   data() {
     return {
+      categories: categories,
       lines: 1,
       score: 2.5,
       totalG: 0,
@@ -19,16 +21,16 @@ export default {
     },
     onChildClick([category, clicked]: [string, boolean]): void {
       switch (category) {
-        case "G":
+        case categories.grammar:
           clicked ? this.totalG++ : this.totalG--;
           break;
-        case "V":
+        case categories.vocabulary:
           clicked ? this.totalV++ : this.totalV--;
           break;
-        case "P":
+        case categories.pronunciation:
           clicked ? this.totalP++ : this.totalP--;
           break;
-        case "F":
+        case categories.fluency:
           clicked ? this.totalF++ : this.totalF--;
           break;
         default:
@@ -73,10 +75,22 @@ export default {
   <div class="sheet">
     <div class="score">Score: {{ score }}</div>
     <div class="points">
-      <div class="point" title="Grammar">{{ totalG }}</div>
-      <div class="point" title="Vocabulary">{{ totalV }}</div>
-      <div class="point" title="Pronunciation">{{ totalP }}</div>
-      <div class="point" title="Fluency">{{ totalF }}</div>
+      <div class="point" title="Grammar">
+        <div>{{ categories.grammar }}</div>
+        <div>{{ totalG }}</div>
+      </div>
+      <div class="point" title="Vocabulary">
+        <div>{{ categories.vocabulary }}</div>
+        <div>{{ totalV }}</div>
+      </div>
+      <div class="point" title="Pronunciation">
+        <div>{{ categories.pronunciation }}</div>
+        <div>{{ totalP }}</div>
+      </div>
+      <div class="point" title="Fluency">
+        <div>{{ categories.fluency }}</div>
+        <div>{{ totalF }}</div>
+      </div>
     </div>
     <div class="title">
       <div>NOTE</div>
@@ -102,9 +116,9 @@ export default {
 .score {
   width: 248px;
   margin: 0 auto var(--space-1);
-  background-color: var(--neutral400);
+  background-color: var(--primary500);
   border-radius: var(--space-1);
-  color: var(--neutral500);
+  color: var(--primary100);
   font-size: 2rem;
   padding: var(--space-1);
   text-align: center;
@@ -118,29 +132,46 @@ export default {
   padding-bottom: var(--space-3);
 
   .point {
-    background-color: var(--neutral400);
-    color: var(--neutral500);
-    font-size: 2rem;
-    padding: var(--space-1);
-    border-radius: var(--space-1);
     width: var(--space-7);
     text-align: center;
+
+    :first-child {
+      background-color: var(--primary500);
+      color: var(--primary100);
+      border-radius: var(--space-1) var(--space-1) 0 0;
+      font-size: 0.8rem;
+      padding: var(--space-0-5);
+    }
+
+    :last-child {
+      background-color: var(--neutral400);
+      color: var(--neutral500);
+      font-size: 2rem;
+      padding: var(--space-0-5) var(--space-1) var(--space-1);
+      border-radius: 0 0 var(--space-1) var(--space-1);
+    }
   }
 }
 
 .title {
-  display: grid;
-  grid-gap: var(--space-1);
-  grid-template-columns:
-    1fr calc(calc(var(--space-7) * 4) + calc(var(--space-1) * 3))
-    1fr;
-  padding-bottom: var(--space-1);
+  display: none;
+}
 
-  div {
-    padding-left: var(--space-1);
-    color: var(--neutral500);
-    font-weight: bold;
-    font-size: 10px;
+@media (min-width: 769px) {
+  .title {
+    display: grid;
+    grid-gap: var(--space-1);
+    grid-template-columns:
+      1fr calc(calc(var(--space-7) * 4) + calc(var(--space-1) * 3))
+      1fr;
+    padding-bottom: var(--space-1);
+
+    div {
+      padding-left: var(--space-1);
+      color: var(--neutral500);
+      font-weight: bold;
+      font-size: 10px;
+    }
   }
 }
 </style>
