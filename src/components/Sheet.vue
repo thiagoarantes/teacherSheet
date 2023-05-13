@@ -1,4 +1,5 @@
 <script lang="ts">
+import html2pdf from "html2pdf.js";
 import SheetLine from "./SheetLine.vue";
 import { categories } from "../utils";
 
@@ -67,29 +68,37 @@ export default {
           break;
       }
     },
+    exportToPDF() {
+      html2pdf(document.querySelector(".sheet"), {
+        margin: 1,
+        filename: "correction-result.pdf",
+      });
+    },
   },
 };
 </script>
 
 <template>
   <div class="sheet">
-    <div class="score">Score: {{ score }}</div>
-    <div class="points">
-      <div class="point" title="Grammar">
-        <div>{{ categories.grammar }}</div>
-        <div>{{ totalG }}</div>
-      </div>
-      <div class="point" title="Vocabulary">
-        <div>{{ categories.vocabulary }}</div>
-        <div>{{ totalV }}</div>
-      </div>
-      <div class="point" title="Pronunciation">
-        <div>{{ categories.pronunciation }}</div>
-        <div>{{ totalP }}</div>
-      </div>
-      <div class="point" title="Fluency">
-        <div>{{ categories.fluency }}</div>
-        <div>{{ totalF }}</div>
+    <div class="header">
+      <div class="score">Score: {{ score }}</div>
+      <div class="points">
+        <div class="point" title="Grammar">
+          <div>{{ categories.grammar }}</div>
+          <div>{{ totalG }}</div>
+        </div>
+        <div class="point" title="Vocabulary">
+          <div>{{ categories.vocabulary }}</div>
+          <div>{{ totalV }}</div>
+        </div>
+        <div class="point" title="Pronunciation">
+          <div>{{ categories.pronunciation }}</div>
+          <div>{{ totalP }}</div>
+        </div>
+        <div class="point" title="Fluency">
+          <div>{{ categories.fluency }}</div>
+          <div>{{ totalF }}</div>
+        </div>
       </div>
     </div>
     <div class="title">
@@ -106,6 +115,9 @@ export default {
       @new-line="addNewLine"
     />
   </div>
+  <div class="footer">
+    <button class="button" @click="exportToPDF">Export results</button>
+  </div>
 </template>
 
 <style scoped lang="scss">
@@ -113,13 +125,21 @@ export default {
   padding: calc(var(--space-7) + var(--space-2)) var(--space-2) var(--space-2);
 }
 
+.header {
+  display: flex;
+  gap: var(--space-1);
+  padding-bottom: var(--space-3);
+  justify-content: center;
+  align-items: stretch;
+}
+
 .score {
-  width: 248px;
-  margin: 0 auto var(--space-1);
+  display: flex;
+  align-items: center;
   background-color: var(--primary500);
   border-radius: var(--space-1);
-  color: var(--primary100);
-  font-size: 2rem;
+  color: var(--neutral100);
+  font-size: 1.7rem;
   padding: var(--space-1);
   text-align: center;
 }
@@ -127,9 +147,7 @@ export default {
 .points {
   display: flex;
   gap: var(--space-1);
-  margin: 0 auto;
   width: fit-content;
-  padding-bottom: var(--space-3);
 
   .point {
     width: var(--space-7);
@@ -137,7 +155,7 @@ export default {
 
     :first-child {
       background-color: var(--primary500);
-      color: var(--primary100);
+      color: var(--neutral100);
       border-radius: var(--space-1) var(--space-1) 0 0;
       font-size: 0.8rem;
       padding: var(--space-0-5);
@@ -157,7 +175,40 @@ export default {
   display: none;
 }
 
+.footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-2);
+
+  .button {
+    width: 100%;
+    padding: var(--space-2);
+    border-radius: var(--space-2);
+    background-color: var(--primary500);
+    border: none;
+    color: var(--neutral100);
+    font-weight: bold;
+  }
+}
+
 @media (min-width: 769px) {
+  .header {
+    display: block;
+    height: max-content;
+  }
+
+  .score {
+    display: block;
+    width: 248px;
+    margin: 0 auto var(--space-1);
+  }
+
+  .points {
+    margin: 0 auto;
+  }
+
   .title {
     display: grid;
     grid-gap: var(--space-1);
@@ -172,6 +223,22 @@ export default {
       font-weight: bold;
       font-size: 10px;
     }
+  }
+
+  .footer {
+    position: unset;
+    text-align: center;
+
+    .button {
+      width: unset;
+      width: 250px;
+    }
+  }
+}
+
+@media print {
+  button {
+    display: none;
   }
 }
 </style>
