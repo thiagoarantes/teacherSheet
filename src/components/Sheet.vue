@@ -1,16 +1,17 @@
 <script lang="ts">
 import html2pdf from "html2pdf.js";
 import SheetLine from "./SheetLine.vue";
+import ToExport from "./ToExport.vue";
 import { Line } from "./types";
 import { categories } from "../utils";
-import { faLine } from "@fortawesome/free-brands-svg-icons";
 
 export default {
-  components: { SheetLine },
+  components: { SheetLine, ToExport },
   data() {
     return {
       categories: categories,
       state: {
+        name: "Thiago Arantes",
         score: 2.5,
         totalG: 0,
         totalV: 0,
@@ -27,6 +28,18 @@ export default {
     };
   },
   methods: {
+    filterEmptyLines(): Line[] {
+      return this.state.lines.filter((item) => {
+        if (item.note !== "") return true;
+        if (item.hints !== "") return true;
+        if (item.categories.join("") !== "") return true;
+
+        return false;
+      });
+    },
+    formatDocumentName(value: string): string {
+      return value.replace(/[^a-z0-9]/gi, "-").toLowerCase();
+    },
     updateLine(line: Line, index: number): void {
       if (index !== -1) {
         this.state.lines[index] = line;
@@ -86,11 +99,56 @@ export default {
           break;
       }
     },
+    exportSheet() {
+      this.exportToPDF();
+      this.exportToWord();
+    },
     exportToPDF() {
       html2pdf(document.querySelector(".sheet"), {
         margin: 1,
-        filename: "correction-result.pdf",
+        filename: `${this.formatDocumentName(this.state.name)}.pdf`,
       });
+    },
+    exportToWord() {
+      var html = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+        <html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+          <head>
+            <style>        
+              @page Section1 {size:595.45pt 841.7pt; margin:0.25in 0.25in 0.25in 0.25in;mso-header-margin:.5in;mso-footer-margin:.5in;mso-paper-source:0;}
+                div.Section1 {page:Section1;}
+              @page Section2 {size:841.7pt 595.45pt;mso-page-orientation:landscape;margin:0.25in 0.25in 0.25in 0.25in;mso-header-margin:.5in;mso-footer-margin:.5in;mso-paper-source:0;}
+                div.Section2 {page:Section2;}
+            </style>
+            <meta charset='utf-8'>
+            <title>Correction Sheet</title>
+          </head>
+          <body>
+            <div class=Section2>
+              ${document.querySelector(".print")?.innerHTML}
+            </div>
+          </body>
+        </html>`;
+
+      // Specify link url
+      var url =
+        "data:application/vnd.ms-word;charset=utf-8," +
+        encodeURIComponent(html);
+
+      // Create download link element
+      var downloadLink = document.createElement("a");
+
+      document.body.appendChild(downloadLink);
+
+      // Create a link to the file
+      downloadLink.href = url;
+
+      // Setting the file name
+      downloadLink.download = `${this.formatDocumentName(this.state.name)}.doc`;
+
+      //triggering the function
+      downloadLink.click();
+
+      document.body.removeChild(downloadLink);
     },
   },
 };
@@ -98,6 +156,10 @@ export default {
 
 <template>
   <div class="sheet">
+    <div class="name">
+      <div class="label">NAME</div>
+      <input class="input" type="text" v-model="state.name" />
+    </div>
     <div class="header">
       <div class="score">Score: {{ state.score }}</div>
       <div class="points">
@@ -132,14 +194,34 @@ export default {
       @update-line="updateLine"
     />
   </div>
+  <div class="print">
+    <ToExport :name="state.name" :lines="filterEmptyLines()" />
+  </div>
   <div class="footer">
-    <button class="button" @click="exportToPDF">Export results</button>
+    <button class="button" @click="exportSheet">Export results</button>
   </div>
 </template>
 
 <style scoped lang="scss">
 .sheet {
   padding: calc(var(--space-7) + var(--space-2)) var(--space-2);
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.name {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-bottom: var(--space-2);
+
+  .label {
+    padding: 0;
+  }
+
+  .input {
+    width: 100%;
+  }
 }
 
 .header {
@@ -209,6 +291,10 @@ export default {
     color: var(--neutral100);
     font-weight: bold;
   }
+}
+
+.print {
+  display: none;
 }
 
 @media (min-width: 769px) {

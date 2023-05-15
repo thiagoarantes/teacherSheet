@@ -25,3 +25,18 @@ html,
 body {
   height: 100%;
 }
+
+.button,
+.input {
+  padding: var(--space-1);
+  border-radius: 0;
+  border: 1px solid var(--neutral500);
+  line-height: 1.3rem;
+}
+
+.label {
+  padding-left: var(--space-1);
+  color: var(--neutral500);
+  font-weight: bold;
+  font-size: 10px;
+}

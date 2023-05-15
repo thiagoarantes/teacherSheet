@@ -65,9 +65,9 @@ export default {
 
 <template>
   <div class="line">
-    <div>NOTE</div>
-    <div>CATEGORIES</div>
-    <div>HINTS</div>
+    <div class="label">NOTE</div>
+    <div class="label">CATEGORIES</div>
+    <div class="label">HINTS</div>
     <input type="text" class="input" v-model="note" @input="updateLine" />
     <button
       class="button"
@@ -145,21 +145,6 @@ export default {
   :last-child {
     grid-area: i2;
   }
-
-  div {
-    padding-left: var(--space-1);
-    color: var(--neutral500);
-    font-weight: bold;
-    font-size: 10px;
-  }
-}
-
-.button,
-.input {
-  padding: var(--space-1);
-  border-radius: 0;
-  border: 1px solid var(--neutral500);
-  line-height: 1.3rem;
 }
 
 .button {
