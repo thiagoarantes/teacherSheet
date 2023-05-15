@@ -49,6 +49,7 @@ export default {
       width: 100%;
     "
     cellspacing="0"
+    cellpadding="3"
   >
     <tr style="background-color: #ececec">
       <td style="padding: 4px; width: 25%"><b>Note</b></td>
@@ -56,13 +57,32 @@ export default {
       <td style="padding: 4px; width: 25%"><b>Hints</b></td>
       <td style="padding: 4px; width: 25%"><b>Correction</b></td>
     </tr>
-    <tr v-for="line of lines">
-      <td style="padding: 4px; width: 25%">{{ line.note }}</td>
-      <td style="padding: 4px; width: 25%">
+    <tr v-for="(line, index) of lines">
+      <td
+        style="padding: 4px; width: 25%"
+        :style="{
+          backgroundColor: index % 2 === 0 ? '#f2fbff' : 'transparent',
+        }"
+      >
+        {{ line.note }}
+      </td>
+      <td
+        style="padding: 4px; width: 25%"
+        :style="{
+          backgroundColor: index % 2 === 0 ? '#f2fbff' : 'transparent',
+        }"
+      >
         {{ formatCategories(line.categories) }}
       </td>
-      <td style="padding: 4px; width: 25%">{{ line.hints }}</td>
-      <td style="padding: 4px; width: 25%"></td>
+      <td
+        style="padding: 4px; width: 25%"
+        :style="{
+          backgroundColor: index % 2 === 0 ? '#f2fbff' : 'transparent',
+        }"
+      >
+        {{ line.hints }}
+      </td>
+      <td style="padding: 4px; width: 25%; border: 1px solid gray"></td>
     </tr>
   </table>
 </template>
