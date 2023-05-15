@@ -1,70 +1,88 @@
 <script lang="ts">
 import html2pdf from "html2pdf.js";
 import SheetLine from "./SheetLine.vue";
+import { Line } from "./types";
 import { categories } from "../utils";
+import { faLine } from "@fortawesome/free-brands-svg-icons";
 
 export default {
   components: { SheetLine },
   data() {
     return {
       categories: categories,
-      lines: 1,
-      score: 2.5,
-      totalG: 0,
-      totalV: 0,
-      totalP: 0,
-      totalF: 0,
+      state: {
+        score: 2.5,
+        totalG: 0,
+        totalV: 0,
+        totalP: 0,
+        totalF: 0,
+        lines: [
+          {
+            note: "",
+            categories: [""],
+            hints: "",
+          },
+        ],
+      },
     };
   },
   methods: {
-    addNewLine(isAddingNewLine: boolean): void {
-      isAddingNewLine && this.lines++;
+    updateLine(line: Line, index: number): void {
+      if (index !== -1) {
+        this.state.lines[index] = line;
+
+        /** Add new line automatically */
+        if (this.state.lines.length === index + 1) {
+          this.state.lines.push({ note: "", categories: [""], hints: "" });
+        }
+
+        this.updateCategoriesScore();
+      }
     },
-    onChildClick([category, clicked]: [string, boolean]): void {
-      switch (category) {
-        case categories.grammar:
-          clicked ? this.totalG++ : this.totalG--;
-          break;
-        case categories.vocabulary:
-          clicked ? this.totalV++ : this.totalV--;
-          break;
-        case categories.pronunciation:
-          clicked ? this.totalP++ : this.totalP--;
-          break;
-        case categories.fluency:
-          clicked ? this.totalF++ : this.totalF--;
-          break;
-        default:
-          break;
+    updateCategoriesScore(): void {
+      this.state.totalG = 0;
+      this.state.totalV = 0;
+      this.state.totalP = 0;
+      this.state.totalF = 0;
+
+      for (const line of this.state.lines) {
+        this.state.totalG += line.categories[0] ? 1 : 0;
+        this.state.totalV += line.categories[1] ? 1 : 0;
+        this.state.totalP += line.categories[2] ? 1 : 0;
+        this.state.totalF += line.categories[3] ? 1 : 0;
       }
 
       this.updateScore();
     },
     updateScore(): void {
-      const totalPoints = this.totalG + this.totalV + this.totalP + this.totalF;
+      const totalPoints =
+        this.state.totalG +
+        this.state.totalV +
+        this.state.totalP +
+        this.state.totalF;
 
       switch (totalPoints) {
         case 0:
-          this.score = 2.5;
+          this.state.score = 2.5;
           break;
         case 1:
         case 2:
-          this.score = 2.0;
+          this.state.score = 2.0;
           break;
         case 3:
         case 4:
-          this.score = 1.5;
+          this.state.score = 1.5;
           break;
         case 5:
         case 6:
-          this.score = 1.0;
+          this.state.score = 1.0;
           break;
         case 7:
         case 8:
-          this.score = 0.5;
+          this.state.score = 0.5;
           break;
         default:
-          this.score = 0.25;
+          this.state.score = 0.25;
           break;
       }
     },
@@ -81,23 +99,23 @@ export default {
 <template>
   <div class="sheet">
     <div class="header">
-      <div class="score">Score: {{ score }}</div>
+      <div class="score">Score: {{ state.score }}</div>
       <div class="points">
         <div class="point" title="Grammar">
           <div>{{ categories.grammar }}</div>
-          <div>{{ totalG }}</div>
+          <div>{{ state.totalG }}</div>
         </div>
         <div class="point" title="Vocabulary">
           <div>{{ categories.vocabulary }}</div>
-          <div>{{ totalV }}</div>
+          <div>{{ state.totalV }}</div>
         </div>
         <div class="point" title="Pronunciation">
           <div>{{ categories.pronunciation }}</div>
-          <div>{{ totalP }}</div>
+          <div>{{ state.totalP }}</div>
         </div>
         <div class="point" title="Fluency">
           <div>{{ categories.fluency }}</div>
-          <div>{{ totalF }}</div>
+          <div>{{ state.totalF }}</div>
         </div>
       </div>
     </div>
@@ -107,12 +125,11 @@ export default {
       <div>HINTS</div>
     </div>
     <SheetLine
-      v-for="index in lines"
-      :lines="lines"
-      :line="index"
+      v-for="(line, index) in state.lines"
+      :lineNumber="index"
+      :line="line"
       :key="index"
-      @clicked="onChildClick"
-      @new-line="addNewLine"
+      @update-line="updateLine"
     />
   </div>
   <div class="footer">

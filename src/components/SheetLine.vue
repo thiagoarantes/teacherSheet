@@ -1,22 +1,27 @@
 <script lang="ts">
+import { PropType } from "vue";
+import { Line } from "./types";
 import { categories } from "../utils";
 
 export default {
   props: {
-    lines: Number,
-    line: Number,
+    lineNumber: Number,
+    line: Object as PropType<Line>,
   },
   data() {
     return {
       categories: categories,
-      bGrammar: false,
-      bVocabulary: false,
-      bPronunciation: false,
-      bFluency: false,
+      note: this.line?.note || "",
+      hints: this.line?.hints || "",
+      bGrammar: this.line?.categories.indexOf(categories.grammar) !== -1,
+      bVocabulary: this.line?.categories.indexOf(categories.vocabulary) !== -1,
+      bPronunciation:
+        this.line?.categories.indexOf(categories.pronunciation) !== -1,
+      bFluency: this.line?.categories.indexOf(categories.fluency) !== -1,
     };
   },
   methods: {
-    onClickButton(category: string, clicked: boolean): void {
+    onClickButton(category: string): void {
       switch (category) {
         case categories.grammar:
           this.bGrammar = !this.bGrammar;
@@ -34,17 +39,25 @@ export default {
           break;
       }
 
-      clicked = !clicked;
-
-      this.$emit("clicked", [category, clicked]);
+      this.updateLine();
     },
-    verifyLine(event: Event) {
-      /** only apply rule in the last line on the sheet */
-      if (this.line === this.lines) {
-        const hasValue = (<HTMLInputElement>event.target).value !== "";
+    updateLine() {
+      const newLine: Line = {
+        note: this.note,
+        categories: [
+          this.bGrammar ? categories.grammar : "",
+          this.bVocabulary ? categories.vocabulary : "",
+          this.bPronunciation ? categories.pronunciation : "",
+          this.bFluency ? categories.fluency : "",
+        ],
+        hints: this.hints,
+      };
 
-        this.$emit("new-line", hasValue);
-      }
+      this.$emit(
+        "update-line",
+        newLine,
+        this.lineNumber === undefined ? -1 : this.lineNumber
+      );
     },
   },
 };
@@ -55,38 +68,36 @@ export default {
     <div>NOTE</div>
     <div>CATEGORIES</div>
     <div>HINTS</div>
-    <input type="text" class="input" @input="verifyLine" />
+    <input type="text" class="input" v-model="note" @input="updateLine" />
     <button
       class="button"
       :class="{ clicked: bGrammar }"
-      @click="(_$event) => onClickButton(categories.grammar, bGrammar)"
+      @click="() => onClickButton(categories.grammar)"
     >
       {{ categories.grammar }}
     </button>
     <button
       class="button"
       :class="{ clicked: bVocabulary }"
-      @click="(_$event) => onClickButton(categories.vocabulary, bVocabulary)"
+      @click="() => onClickButton(categories.vocabulary)"
     >
       {{ categories.vocabulary }}
     </button>
     <button
       class="button"
       :class="{ clicked: bPronunciation }"
-      @click="
-        (_$event) => onClickButton(categories.pronunciation, bPronunciation)
-      "
+      @click="() => onClickButton(categories.pronunciation)"
     >
       {{ categories.pronunciation }}
     </button>
     <button
       class="button"
       :class="{ clicked: bFluency }"
-      @click="(_$event) => onClickButton(categories.fluency, bFluency)"
+      @click="() => onClickButton(categories.fluency)"
     >
       {{ categories.fluency }}
     </button>
-    <input type="text" class="input" />
+    <input type="text" class="input" v-model="hints" @input="updateLine" />
   </div>
 </template>
 
