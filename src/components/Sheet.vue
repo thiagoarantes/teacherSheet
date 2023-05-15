@@ -11,7 +11,7 @@ export default {
     return {
       categories: categories,
       state: {
-        name: "Thiago Arantes",
+        name: "",
         score: 2.5,
         totalG: 0,
         totalV: 0,
@@ -106,7 +106,9 @@ export default {
     exportToPDF() {
       html2pdf(document.querySelector(".sheet"), {
         margin: 1,
-        filename: `${this.formatDocumentName(this.state.name)}.pdf`,
+        filename: `${
+          this.formatDocumentName(this.state.name) || "correction"
+        }.pdf`,
       });
     },
     exportToWord() {
@@ -143,7 +145,9 @@ export default {
       downloadLink.href = url;
 
       // Setting the file name
-      downloadLink.download = `${this.formatDocumentName(this.state.name)}.doc`;
+      downloadLink.download = `${
+        this.formatDocumentName(this.state.name) || "correction"
+      }.doc`;
 
       //triggering the function
       downloadLink.click();
