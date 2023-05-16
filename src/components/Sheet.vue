@@ -64,31 +64,53 @@ export default {
         this.state.totalF += line.categories[3] ? 1 : 0;
       }
     },
-    displayScore(): number {
-      const totalPoints =
-        this.state.totalG +
-        this.state.totalV +
-        this.state.totalP +
-        this.state.totalF;
+    displayScoreByCategory(category: string): number {
+      let points = 0;
 
-      switch (totalPoints) {
+      switch (category) {
+        case categories.grammar:
+          points = this.state.totalG;
+          break;
+        case categories.vocabulary:
+          points = this.state.totalV;
+          break;
+        case categories.pronunciation:
+          points = this.state.totalP;
+          break;
+        case categories.fluency:
+          points = this.state.totalF;
+          break;
+        default:
+          break;
+      }
+
+      switch (points) {
         case 0:
-          return 2.5;
         case 1:
+          return 2.5;
         case 2:
-          return 2.0;
         case 3:
+          return 2.0;
         case 4:
-          return 1.5;
         case 5:
+          return 1.5;
         case 6:
-          return 1.0;
         case 7:
+          return 1.0;
         case 8:
+        case 9:
           return 0.5;
         default:
           return 0.25;
       }
+    },
+    displayFinalScore(): number {
+      return (
+        this.displayScoreByCategory(categories.grammar) +
+        this.displayScoreByCategory(categories.vocabulary) +
+        this.displayScoreByCategory(categories.pronunciation) +
+        this.displayScoreByCategory(categories.fluency)
+      );
     },
     exportSheet() {
       this.exportToPDF();
@@ -156,22 +178,37 @@ export default {
       <input class="input" type="text" v-model="state.name" />
     </div>
     <div class="header">
-      <div class="score">Score: {{ displayScore() }}</div>
+      <div class="score">
+        <div>Score</div>
+        <div>{{ displayFinalScore() }}</div>
+      </div>
       <div class="points">
         <div class="point" title="Grammar">
-          <div>{{ categories.grammar }}</div>
+          <div>
+            {{ categories.grammar }} -
+            {{ displayScoreByCategory(categories.grammar) }}
+          </div>
           <div>{{ state.totalG }}</div>
         </div>
         <div class="point" title="Vocabulary">
-          <div>{{ categories.vocabulary }}</div>
+          <div>
+            {{ categories.vocabulary }} -
+            {{ displayScoreByCategory(categories.vocabulary) }}
+          </div>
           <div>{{ state.totalV }}</div>
         </div>
         <div class="point" title="Pronunciation">
-          <div>{{ categories.pronunciation }}</div>
+          <div>
+            {{ categories.pronunciation }} -
+            {{ displayScoreByCategory(categories.pronunciation) }}
+          </div>
           <div>{{ state.totalP }}</div>
         </div>
         <div class="point" title="Fluency">
-          <div>{{ categories.fluency }}</div>
+          <div>
+            {{ categories.fluency }} -
+            {{ displayScoreByCategory(categories.fluency) }}
+          </div>
           <div>{{ state.totalF }}</div>
         </div>
       </div>
@@ -229,19 +266,18 @@ export default {
   display: flex;
   gap: var(--space-1);
   padding-bottom: var(--space-3);
-  justify-content: center;
+  justify-content: space-between;
   align-items: stretch;
 }
 
 .score {
-  display: flex;
-  align-items: center;
   background-color: var(--primary500);
   border-radius: var(--space-1);
   color: var(--neutral100);
   font-size: 1.5rem;
   padding: var(--space-1);
   text-align: center;
+  flex-grow: 1;
 }
 
 .points {
@@ -320,10 +356,16 @@ export default {
   }
 
   .score {
-    display: block;
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
     width: 248px;
     margin: 0 auto var(--space-1);
     font-size: 2rem;
+
+    :first-child::after {
+      content: ": ";
+    }
   }
 
   .points {
