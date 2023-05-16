@@ -1,12 +1,13 @@
 <script lang="ts">
 import html2pdf from "html2pdf.js";
+import CategorySummary from "./CategorySummary.vue";
 import SheetLine from "./SheetLine.vue";
 import ToExport from "./ToExport.vue";
 import { Line } from "./types";
-import { categories } from "../utils";
+import { calculateScore, categories } from "../utils";
 
 export default {
-  components: { SheetLine, ToExport },
+  components: { CategorySummary, SheetLine, ToExport },
   data() {
     return {
       categories: categories,
@@ -64,52 +65,12 @@ export default {
         this.state.totalF += line.categories[3] ? 1 : 0;
       }
     },
-    displayScoreByCategory(category: string): number {
-      let points = 0;
-
-      switch (category) {
-        case categories.grammar:
-          points = this.state.totalG;
-          break;
-        case categories.vocabulary:
-          points = this.state.totalV;
-          break;
-        case categories.pronunciation:
-          points = this.state.totalP;
-          break;
-        case categories.fluency:
-          points = this.state.totalF;
-          break;
-        default:
-          break;
-      }
-
-      switch (points) {
-        case 0:
-        case 1:
-          return 2.5;
-        case 2:
-        case 3:
-          return 2.0;
-        case 4:
-        case 5:
-          return 1.5;
-        case 6:
-        case 7:
-          return 1.0;
-        case 8:
-        case 9:
-          return 0.5;
-        default:
-          return 0.25;
-      }
-    },
     displayFinalScore(): number {
       return (
-        this.displayScoreByCategory(categories.grammar) +
-        this.displayScoreByCategory(categories.vocabulary) +
-        this.displayScoreByCategory(categories.pronunciation) +
-        this.displayScoreByCategory(categories.fluency)
+        calculateScore(this.state.totalG) +
+        calculateScore(this.state.totalV) +
+        calculateScore(this.state.totalP) +
+        calculateScore(this.state.totalF)
       );
     },
     exportSheet() {
@@ -183,34 +144,22 @@ export default {
         <div>{{ displayFinalScore() }}</div>
       </div>
       <div class="points">
-        <div class="point" title="Grammar">
-          <div>
-            {{ categories.grammar }} -
-            {{ displayScoreByCategory(categories.grammar) }}
-          </div>
-          <div>{{ state.totalG }}</div>
-        </div>
-        <div class="point" title="Vocabulary">
-          <div>
-            {{ categories.vocabulary }} -
-            {{ displayScoreByCategory(categories.vocabulary) }}
-          </div>
-          <div>{{ state.totalV }}</div>
-        </div>
-        <div class="point" title="Pronunciation">
-          <div>
-            {{ categories.pronunciation }} -
-            {{ displayScoreByCategory(categories.pronunciation) }}
-          </div>
-          <div>{{ state.totalP }}</div>
-        </div>
-        <div class="point" title="Fluency">
-          <div>
-            {{ categories.fluency }} -
-            {{ displayScoreByCategory(categories.fluency) }}
-          </div>
-          <div>{{ state.totalF }}</div>
-        </div>
+        <CategorySummary
+          :category="categories.grammar"
+          :points="state.totalG"
+        />
+        <CategorySummary
+          :category="categories.vocabulary"
+          :points="state.totalV"
+        />
+        <CategorySummary
+          :category="categories.pronunciation"
+          :points="state.totalP"
+        />
+        <CategorySummary
+          :category="categories.fluency"
+          :points="state.totalF"
+        />
       </div>
     </div>
     <div class="title">
@@ -284,27 +233,6 @@ export default {
   display: flex;
   gap: var(--space-1);
   width: fit-content;
-
-  .point {
-    width: var(--space-7);
-    text-align: center;
-
-    :first-child {
-      background-color: var(--primary500);
-      color: var(--neutral100);
-      border-radius: var(--space-1) var(--space-1) 0 0;
-      font-size: 0.8rem;
-      padding: var(--space-0-5);
-    }
-
-    :last-child {
-      background-color: var(--neutral400);
-      color: var(--neutral500);
-      font-size: 2rem;
-      padding: var(--space-0-5) var(--space-1) var(--space-1);
-      border-radius: 0 0 var(--space-1) var(--space-1);
-    }
-  }
 }
 
 .title {
