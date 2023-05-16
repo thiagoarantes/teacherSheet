@@ -12,7 +12,6 @@ export default {
       categories: categories,
       state: {
         name: "",
-        score: 2.5,
         totalG: 0,
         totalV: 0,
         totalP: 0,
@@ -64,10 +63,8 @@ export default {
         this.state.totalP += line.categories[2] ? 1 : 0;
         this.state.totalF += line.categories[3] ? 1 : 0;
       }
-
-      this.updateScore();
     },
-    updateScore(): void {
+    displayScore(): number {
       const totalPoints =
         this.state.totalG +
         this.state.totalV +
@@ -76,27 +73,21 @@ export default {
 
       switch (totalPoints) {
         case 0:
-          this.state.score = 2.5;
-          break;
+          return 2.5;
         case 1:
         case 2:
-          this.state.score = 2.0;
-          break;
+          return 2.0;
         case 3:
         case 4:
-          this.state.score = 1.5;
-          break;
+          return 1.5;
         case 5:
         case 6:
-          this.state.score = 1.0;
-          break;
+          return 1.0;
         case 7:
         case 8:
-          this.state.score = 0.5;
-          break;
+          return 0.5;
         default:
-          this.state.score = 0.25;
-          break;
+          return 0.25;
       }
     },
     exportSheet() {
@@ -115,7 +106,7 @@ export default {
       var html = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
         <html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
           <head>
-            <style>        
+            <style>
               @page Section1 {size:595.45pt 841.7pt; margin:0.25in 0.25in 0.25in 0.25in;mso-header-margin:.5in;mso-footer-margin:.5in;mso-paper-source:0;}
                 div.Section1 {page:Section1;}
               @page Section2 {size:841.7pt 595.45pt;mso-page-orientation:landscape;margin:0.25in 0.25in 0.25in 0.25in;mso-header-margin:.5in;mso-footer-margin:.5in;mso-paper-source:0;}
@@ -165,7 +156,7 @@ export default {
       <input class="input" type="text" v-model="state.name" />
     </div>
     <div class="header">
-      <div class="score">Score: {{ state.score }}</div>
+      <div class="score">Score: {{ displayScore() }}</div>
       <div class="points">
         <div class="point" title="Grammar">
           <div>{{ categories.grammar }}</div>

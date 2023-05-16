@@ -6,7 +6,6 @@ export interface Line {
 
 export interface State {
   name: string;
-  score: number;
   totalG: number;
   totalV: number;
   totalP: number;
