@@ -202,7 +202,13 @@ export default {
     <ToExport :name="state.name" :lines="filterEmptyLines()" />
   </div>
   <div class="footer">
-    <button class="button" @click="exportSheet">Export results</button>
+    <button class="button pdf" @click="exportToPDF">
+      <font-awesome-icon icon="fa-solid fa-file-pdf" />
+    </button>
+    <button class="button word" @click="exportToWord">
+      <font-awesome-icon icon="fa-solid fa-file-word" />
+    </button>
+    <button class="button" @click="exportSheet">Export both files</button>
   </div>
 </template>
 
@@ -285,15 +291,26 @@ export default {
   right: 0;
   padding: var(--space-2);
   background-color: var(--neutral100);
+  display: grid;
+  grid-gap: var(--space-1);
+  grid-template-columns: 1fr 1fr 3fr;
 
   .button {
     width: 100%;
-    padding: var(--space-2);
+    height: 52px;
     border-radius: var(--space-2);
     background-color: var(--primary500);
     border: none;
     color: var(--neutral100);
     font-weight: bold;
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      height: var(--space-3);
+    }
   }
 }
 
@@ -341,17 +358,21 @@ export default {
   .footer {
     position: unset;
     text-align: center;
+    display: flex;
+    justify-content: center;
 
     .button {
       width: unset;
       width: 250px;
-    }
-  }
-}
 
-@media print {
-  button {
-    display: none;
+      &.pdf:after {
+        content: "Export PDF";
+      }
+
+      &.word::after {
+        content: "Export Word";
+      }
+    }
   }
 }
 </style>
