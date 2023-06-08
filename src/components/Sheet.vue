@@ -1,5 +1,7 @@
 <script lang="ts">
+import HTMLtoDOCX from "html-to-docx";
 import html2pdf from "html2pdf.js";
+import { saveAs } from "file-saver";
 import CategorySummary from "./CategorySummary.vue";
 import SheetLine from "./SheetLine.vue";
 import ToExport from "./ToExport.vue";
@@ -85,48 +87,35 @@ export default {
         }.pdf`,
       });
     },
-    exportToWord() {
-      var html = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-        <html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-          <head>
-            <style>
-              @page Section1 {size:595.45pt 841.7pt; margin:0.25in 0.25in 0.25in 0.25in;mso-header-margin:.5in;mso-footer-margin:.5in;mso-paper-source:0;}
-                div.Section1 {page:Section1;}
-              @page Section2 {size:841.7pt 595.45pt;mso-page-orientation:landscape;margin:0.25in 0.25in 0.25in 0.25in;mso-header-margin:.5in;mso-footer-margin:.5in;mso-paper-source:0;}
-                div.Section2 {page:Section2;}
-            </style>
-            <meta charset='utf-8'>
-            <title>Correction Sheet</title>
-          </head>
-          <body>
-            <div class=Section2>
-              ${document.querySelector(".print")?.innerHTML}
-            </div>
-          </body>
-        </html>`;
+    async exportToWord() {
+      const fileName = this.formatDocumentName(this.state.name) || "correction";
+      const htmlString = `<!DOCTYPE html>
+                          <html lang="en">
+                            <head>
+                                <meta charset="UTF-8" />
+                                <title>${fileName}</title>
+                            </head>
+                            <body>${
+                              document.querySelector(".print")?.innerHTML
+                            }</body>
+                          </html>`;
 
-      // Specify link url
-      var url =
-        "data:application/vnd.ms-word;charset=utf-8," +
-        encodeURIComponent(html);
+      const fileBuffer = await HTMLtoDOCX(htmlString, null, {
+        font: "Verdana",
+        fontSize: 14,
+        margins: {
+          top: 500,
+          left: 500,
+          bottom: 500,
+          right: 500,
+          header: 0,
+          footer: 0,
+          gutter: 0,
+        },
+        orientation: "landscape",
+      });
 
-      // Create download link element
-      var downloadLink = document.createElement("a");
-
-      document.body.appendChild(downloadLink);
-
-      // Create a link to the file
-      downloadLink.href = url;
-
-      // Setting the file name
-      downloadLink.download = `${
-        this.formatDocumentName(this.state.name) || "correction"
-      }.doc`;
-
-      //triggering the function
-      downloadLink.click();
-
-      document.body.removeChild(downloadLink);
+      saveAs(fileBuffer, `${fileName}.docx`);
     },
   },
 };

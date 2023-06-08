@@ -32,34 +32,28 @@ export default {
 </script>
 
 <template>
-  <div
-    style="
-      font-family: Verdana, Geneva, Tahoma, sans-serif;
-      font-size: 10px;
-      margin-bottom: 16px;
-    "
-  >
-    Name: <b>{{ name }}</b>
-  </div>
+  <table style="margin-bottom: 16px">
+    <tr>
+      <td>Name</td>
+      <td>
+        <b>{{ name }}</b>
+      </td>
+    </tr>
+  </table>
   <table
-    style="
-      font-family: Verdana, Geneva, Tahoma, sans-serif;
-      font-size: 10px;
-      border: 1px solid black;
-      width: 100%;
-    "
+    style="border: 1px solid black; width: 100%"
     cellspacing="0"
     cellpadding="3"
   >
     <tr style="background-color: #ececec">
-      <td style="padding: 4px; width: 25%"><b>Note</b></td>
-      <td style="padding: 4px; width: 25%"><b>Categories</b></td>
-      <td style="padding: 4px; width: 25%"><b>Hints</b></td>
-      <td style="padding: 4px; width: 25%"><b>Correction</b></td>
+      <td style="padding: 4px"><b>Note</b></td>
+      <td style="padding: 4px"><b>Categories</b></td>
+      <td style="padding: 4px"><b>Hints</b></td>
+      <td style="padding: 4px"><b>Correction</b></td>
     </tr>
     <tr v-for="(line, index) of lines">
       <td
-        style="padding: 4px; width: 25%"
+        style="padding: 4px"
         :style="{
           backgroundColor: index % 2 === 0 ? '#f2fbff' : 'transparent',
         }"
@@ -67,7 +61,7 @@ export default {
         {{ line.note }}
       </td>
       <td
-        style="padding: 4px; width: 25%"
+        style="padding: 4px"
         :style="{
           backgroundColor: index % 2 === 0 ? '#f2fbff' : 'transparent',
         }"
@@ -75,14 +69,14 @@ export default {
         {{ formatCategories(line.categories) }}
       </td>
       <td
-        style="padding: 4px; width: 25%"
+        style="padding: 4px"
         :style="{
           backgroundColor: index % 2 === 0 ? '#f2fbff' : 'transparent',
         }"
       >
         {{ line.hints }}
       </td>
-      <td style="padding: 4px; width: 25%; border: 1px solid gray"></td>
+      <td style="padding: 4px; border: 1px solid gray"></td>
     </tr>
   </table>
 </template>
