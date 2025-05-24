@@ -2,36 +2,38 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
 export function generateDocx(doc: any) {
-  var nodeParent = doc.getElementsByTagName("body");
-  var xmlDoc = document.implementation.createDocument(null, "mywordXML");
-  var padreXML = xmlDoc.childNodes[0];
-  var zip = new JSZip();
+  const nodeParent = doc.getElementsByTagName("body");
+  const xmlDoc = document.implementation.createDocument(null, "mywordXML");
+  let parentXML = xmlDoc.childNodes[0];
+  const zip = new JSZip();
 
-  var numImg = 1;
-  var numLink = 1;
-  var relsDocumentXML =
+  let linkCounter = 1;
+  let relsDocumentXML =
     '<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
     '<Relationship Id="rId0" Target="styles.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"/>';
 
-  var countList = 0;
-  var numberingString = "";
-  var numIdString = "";
+  let listCounter = 0;
+  let numberingString = "";
+  let numIdString = "";
 
-  var cols = 0;
+  let cols = 0;
 
-  var tabla: any = null;
-  var orientationRTL = false;
+  let currentTable: any = null;
+  let orientationRTL = false;
 
   function checkIfInsertTag(newEle: any): boolean {
-    if (newEle?.nodeName === "w:Noinsert") return false;
-    else return true;
+    if (newEle?.nodeName === "w:Noinsert") {
+      return false;
+    }
+
+    return true;
   }
 
-  function createNodeBlockquote(node: any, xmlDoc: any): any {
-    var newEle = xmlDoc.createElement("w:p");
-    var wpPr = xmlDoc.createElement("w:pPr");
+  function createNodeBlockquote(xmlDoc: any): any {
+    const newEle = xmlDoc.createElement("w:p");
+    const wpPr = xmlDoc.createElement("w:pPr");
 
-    var wstyle = xmlDoc.createElement("w:pStyle");
+    const wstyle = xmlDoc.createElement("w:pStyle");
     wstyle.setAttribute("w:val", "blockQuote");
     wpPr.appendChild(wstyle);
 
@@ -40,35 +42,49 @@ export function generateDocx(doc: any) {
     return newEle;
   }
 
-  function consanguinidadLista(node: any): boolean {
+  function consanguinityList(node: any): boolean {
     if (
       node.parentNode.nodeName === "BODY" ||
       node.parentNode.nodeName === "TD"
-    )
+    ) {
       return false;
+    }
 
     if (
       node.nodeName === "UL" ||
       node.nodeName === "OL" ||
       node.nodeName === "LI"
-    )
+    ) {
       return true;
-    else {
-      var padre = node.parentNode;
+    }
 
-      for (var hijo = 0; hijo < node.childNodes.length; hijo++)
-        if (consanguinidadLista(node.childNodes[hijo])) return true;
+    const parentNode = node.parentNode;
 
-      for (var hermano = 0; hermano < padre.childNodes.length; hermano++) {
-        if (padre.childNodes[hermano] != node) {
-          var nodHermano = padre.childNodes[hermano];
-          for (
-            var sobrino = 0;
-            sobrino < nodHermano.childNodes.length;
-            sobrino++
-          )
-            if (consanguinidadLista(nodHermano.childNodes[sobrino]))
-              return true;
+    for (
+      let childIndex = 0;
+      childIndex < node.childNodes.length;
+      childIndex++
+    ) {
+      if (consanguinityList(node.childNodes[childIndex])) {
+        return true;
+      }
+    }
+
+    for (
+      let siblingIndex = 0;
+      siblingIndex < parentNode.childNodes.length;
+      siblingIndex++
+    ) {
+      if (parentNode.childNodes[siblingIndex] != node) {
+        const siblingNode = parentNode.childNodes[siblingIndex];
+        for (
+          let nephewIndex = 0;
+          nephewIndex < siblingNode.childNodes.length;
+          nephewIndex++
+        ) {
+          if (consanguinityList(siblingNode.childNodes[nephewIndex])) {
+            return true;
+          }
         }
       }
     }
@@ -76,67 +92,78 @@ export function generateDocx(doc: any) {
     return false;
   }
 
-  function createNodeXML(node: any, xmlDoc: any, padreXML: any): void {
-    var newEle = parseHTMLtoDocx(node, xmlDoc, padreXML);
+  function createNodeXML(node: any, xmlDoc: any, parentXMLElement: any): void {
+    const newEle = parseHTMLtoDocx(node, xmlDoc);
 
-    var ancestro = xmlDoc.getElementsByTagName("w:body")[0];
+    const ancestor = xmlDoc.getElementsByTagName("w:body")[0];
 
-    var insertarTag = checkIfInsertTag(newEle);
+    const insertTag = checkIfInsertTag(newEle);
 
-    if (insertarTag) {
+    if (insertTag) {
       if (newEle.nodeName === "w:tbl") {
-        ancestro.appendChild(newEle);
-        tabla = newEle;
+        ancestor.appendChild(newEle);
+        currentTable = newEle;
       } else if (newEle.nodeName === "w:tr") {
-        if (tabla) tabla.appendChild(newEle);
-      } else if (consanguinidadLista(node)) {
+        if (currentTable) {
+          currentTable.appendChild(newEle);
+        }
+      } else if (consanguinityList(node)) {
         if (newEle.nodeName === "w:r") {
           if (
-            ancestro.lastElementChild &&
-            ancestro.lastElementChild.nodeName === "w:p"
-          )
-            ancestro.lastElementChild.appendChild(newEle);
-          else {
-            var p = xmlDoc.createElement("w:p");
+            ancestor.lastElementChild &&
+            ancestor.lastElementChild.nodeName === "w:p"
+          ) {
+            ancestor.lastElementChild.appendChild(newEle);
+          } else {
+            const p = xmlDoc.createElement("w:p");
             p.appendChild(newEle);
-            ancestro.appendChild(p);
+            ancestor.appendChild(p);
           }
-        } else ancestro.appendChild(newEle);
+        } else {
+          ancestor.appendChild(newEle);
+        }
       } else {
-        padreXML.appendChild(newEle);
+        parentXMLElement.appendChild(newEle);
       }
     }
 
-    if (newEle && newEle.nodeName !== "w:Noinsert") padreXML = newEle;
+    if (newEle && newEle.nodeName !== "w:Noinsert") {
+      parentXMLElement = newEle;
+    }
 
-    for (var hijo = 0; hijo < node.childNodes.length; hijo++)
-      createNodeXML(node.childNodes[hijo], xmlDoc, padreXML);
+    for (
+      let childIndex = 0;
+      childIndex < node.childNodes.length;
+      childIndex++
+    ) {
+      createNodeXML(node.childNodes[childIndex], xmlDoc, parentXMLElement);
+    }
   }
 
   function createNodeTD(node: any, xmlDoc: any, colsParam: any): any {
-    var widthPercent = 100 / colsParam;
+    const widthPercent = 100 / colsParam;
 
-    var newEle = xmlDoc.createElement("w:tc");
-    var wtcPr = xmlDoc.createElement("w:tcPr");
-    var valign = xmlDoc.createElement("w:vAlign");
+    const newEle = xmlDoc.createElement("w:tc");
+    const wtcPr = xmlDoc.createElement("w:tcPr");
+    const valign = xmlDoc.createElement("w:vAlign");
     valign.setAttribute("w:val", "bottom");
-    var wtblBorders = xmlDoc.createElement("w:tblBorders");
-    var wtop = xmlDoc.createElement("w:top");
+    const wtblBorders = xmlDoc.createElement("w:tblBorders");
+    const wtop = xmlDoc.createElement("w:top");
     wtop.setAttribute("w:val", "single");
     wtop.setAttribute("w:sz", "10");
     wtop.setAttribute("w:space", "0");
     wtop.setAttribute("w:color", "000000");
-    var wstart = xmlDoc.createElement("w:start");
+    const wstart = xmlDoc.createElement("w:start");
     wstart.setAttribute("w:val", "single");
     wstart.setAttribute("w:sz", "10");
     wstart.setAttribute("w:space", "0");
     wstart.setAttribute("w:color", "000000");
-    var wbottom = xmlDoc.createElement("w:bottom");
+    const wbottom = xmlDoc.createElement("w:bottom");
     wbottom.setAttribute("w:val", "single");
     wbottom.setAttribute("w:sz", "10");
     wbottom.setAttribute("w:space", "0");
     wbottom.setAttribute("w:color", "000000");
-    var wend = xmlDoc.createElement("w:end");
+    const wend = xmlDoc.createElement("w:end");
     wend.setAttribute("w:val", "single");
     wend.setAttribute("w:sz", "10");
     wend.setAttribute("w:space", "0");
@@ -145,15 +172,16 @@ export function generateDocx(doc: any) {
     wtblBorders.appendChild(wstart);
     wtblBorders.appendChild(wbottom);
     wtblBorders.appendChild(wend);
-    var granFather = node.parentNode.parentNode;
-    if (granFather.nodeName === "THEAD") {
-      var wshd = xmlDoc.createElement("w:shd");
+    const grandparentNode = node.parentNode.parentNode;
+
+    if (grandparentNode.nodeName === "THEAD") {
+      const wshd = xmlDoc.createElement("w:shd");
       wshd.setAttribute("w:val", "clear");
       wshd.setAttribute("w:fill", "EEEEEE");
       wtcPr.appendChild(wshd);
     }
 
-    var wtcW = xmlDoc.createElement("w:tcW");
+    const wtcW = xmlDoc.createElement("w:tcW");
     wtcW.setAttribute("w:type", "pct");
     wtcW.setAttribute("w:w", widthPercent + "%");
 
@@ -164,64 +192,63 @@ export function generateDocx(doc: any) {
     newEle.appendChild(wtcPr);
 
     if (node.childNodes.length == 0) {
-      var nodep = xmlDoc.createElement("w:p");
+      const pNode = xmlDoc.createElement("w:p");
+      const rNode = xmlDoc.createElement("w:r");
+      const textNode = xmlDoc.createElement("w:t");
+      const textContent = xmlDoc.createTextNode(" ");
 
-      var noder = xmlDoc.createElement("w:r");
-
-      var nodetext = xmlDoc.createElement("w:t");
-      var text = xmlDoc.createTextNode(" ");
-      nodetext.appendChild(text);
-      noder.appendChild(nodetext);
-      nodep.appendChild(noder);
-      newEle.appendChild(nodep);
+      textNode.appendChild(textContent);
+      rNode.appendChild(textNode);
+      pNode.appendChild(rNode);
+      newEle.appendChild(pNode);
     }
 
     return newEle;
   }
 
-  function createNodeTR(node: any, xmlDoc: any): any {
+  function createNodeTR(xmlDoc: any): any {
     return xmlDoc.createElement("w:tr");
   }
 
-  function createTableNode(node: any, xmlDoc: any): any {
-    var newEle = xmlDoc.createElement("w:tbl");
-    var wtblPr = xmlDoc.createElement("w:tblPr");
-    var wtblStyle = xmlDoc.createElement("w:tblStyle");
+  function createTableNode(xmlDoc: any): any {
+    const newEle = xmlDoc.createElement("w:tbl");
+    const wtblPr = xmlDoc.createElement("w:tblPr");
+    const wtblStyle = xmlDoc.createElement("w:tblStyle");
     wtblStyle.setAttribute("w:val", "TableGrid");
-    var wtblW = xmlDoc.createElement("w:tblW");
+    const wtblW = xmlDoc.createElement("w:tblW");
     wtblW.setAttribute("w:w", "5000");
     wtblW.setAttribute("w:type", "pct");
     wtblPr.appendChild(wtblStyle);
     wtblPr.appendChild(wtblW);
 
-    var wtblBorders = xmlDoc.createElement("w:tblBorders");
-    var wtop = xmlDoc.createElement("w:top");
+    const wtblBorders = xmlDoc.createElement("w:tblBorders");
+    const wtop = xmlDoc.createElement("w:top");
     wtop.setAttribute("w:val", "single");
     wtop.setAttribute("w:sz", "10");
     wtop.setAttribute("w:space", "0");
     wtop.setAttribute("w:color", "000000");
-    var wstart = xmlDoc.createElement("w:start");
+    const wstart = xmlDoc.createElement("w:start");
     wstart.setAttribute("w:val", "single");
     wstart.setAttribute("w:sz", "10");
     wstart.setAttribute("w:space", "0");
     wstart.setAttribute("w:color", "000000");
-    var wbottom = xmlDoc.createElement("w:bottom");
+    const wbottom = xmlDoc.createElement("w:bottom");
     wbottom.setAttribute("w:val", "single");
     wbottom.setAttribute("w:sz", "10");
     wbottom.setAttribute("w:space", "0");
     wbottom.setAttribute("w:color", "000000");
-    var wend = xmlDoc.createElement("w:end");
+    const wend = xmlDoc.createElement("w:end");
     wend.setAttribute("w:val", "single");
     wend.setAttribute("w:sz", "10");
     wend.setAttribute("w:space", "0");
     wend.setAttribute("w:color", "000000");
 
-    var windideH = xmlDoc.createElement("w:insideH");
+    const windideH = xmlDoc.createElement("w:insideH");
     windideH.setAttribute("w:val", "single");
     windideH.setAttribute("w:sz", "5");
     windideH.setAttribute("w:space", "0");
     windideH.setAttribute("w:color", "000000");
-    var windideV = xmlDoc.createElement("w:insideV");
+    const windideV = xmlDoc.createElement("w:insideV");
     windideV.setAttribute("w:val", "single");
     windideV.setAttribute("w:sz", "5");
     windideV.setAttribute("w:space", "0");
@@ -243,16 +270,17 @@ export function generateDocx(doc: any) {
   }
 
   function createHeading(node: any, xmlDoc: any, pos: any): any {
-    var newEle;
+    let newEle;
+
     if (
       node.parentNode.nodeName === "BODY" ||
       node.parentNode.nodeName === "TD"
     ) {
       newEle = xmlDoc.createElement("w:p");
 
-      var newEle2 = xmlDoc.createElement("w:pPr");
+      const newEle2 = xmlDoc.createElement("w:pPr");
 
-      var newEle3 = xmlDoc.createElement("w:pStyle");
+      const newEle3 = xmlDoc.createElement("w:pStyle");
       newEle3.setAttribute("w:val", "Heading" + pos);
 
       newEle.appendChild(newEle2);
@@ -267,39 +295,44 @@ export function generateDocx(doc: any) {
   }
   function checkRTL(newEle: any, xmlDoc: any, node: any): any {
     if (node.attributes && node.attributes[0]) {
-      var direction = node.attributes[0].nodeValue.replace(" ", "");
+      let direction = node.attributes[0].nodeValue.replace(" ", "");
 
       direction = direction.replace("direction:", "");
 
-      var res = direction.substring(0, 3);
+      const res = direction.substring(0, 3);
+
       if (res === "rtl") {
         orientationRTL = true;
-        var elepPr;
+        let pPrElement;
+
         if (
           newEle.childNodes &&
           newEle.childNodes[0] &&
           newEle.childNodes[0].nodeName === "w:pPr"
         ) {
-          elepPr = newEle.childNodes[0];
+          pPrElement = newEle.childNodes[0];
         } else {
-          elepPr = xmlDoc.createElement("w:pPr");
-          newEle.appendChild(elepPr);
+          pPrElement = xmlDoc.createElement("w:pPr");
+          newEle.appendChild(pPrElement);
         }
-        var bidi = xmlDoc.createElement("w:bidi");
+
+        const bidi = xmlDoc.createElement("w:bidi");
         bidi.setAttribute("w:val", "1");
-        elepPr.appendChild(bidi);
-      } else orientationRTL = false;
+        pPrElement.appendChild(bidi);
+      } else {
+        orientationRTL = false;
+      }
     }
 
     return newEle;
   }
 
   function createNodeStrong(node: any, xmlDoc: any): any {
-    var newEle;
+    let newEle;
 
-    var newEleR = xmlDoc.createElement("w:r");
-    var bold = xmlDoc.createElement("w:rPr");
-    var propertyBold = xmlDoc.createElement("w:b");
+    const newEleR = xmlDoc.createElement("w:r");
+    const bold = xmlDoc.createElement("w:rPr");
+    const propertyBold = xmlDoc.createElement("w:b");
     newEleR.appendChild(bold);
     bold.appendChild(propertyBold);
 
@@ -309,17 +342,19 @@ export function generateDocx(doc: any) {
     ) {
       newEle = xmlDoc.createElement("w:p");
       newEle.appendChild(newEleR);
-    } else newEle = newEleR;
+    } else {
+      newEle = newEleR;
+    }
 
     return newEle;
   }
 
   function createNodeEM(node: any, xmlDoc: any): any {
-    var newEle;
+    let newEle;
 
-    var newEleR = xmlDoc.createElement("w:r");
-    var nodeProperty = xmlDoc.createElement("w:rPr");
-    var property = xmlDoc.createElement("w:i");
+    const newEleR = xmlDoc.createElement("w:r");
+    const nodeProperty = xmlDoc.createElement("w:rPr");
+    const property = xmlDoc.createElement("w:i");
     newEleR.appendChild(nodeProperty);
     nodeProperty.appendChild(property);
 
@@ -329,16 +364,18 @@ export function generateDocx(doc: any) {
     ) {
       newEle = xmlDoc.createElement("w:p");
       newEle.appendChild(newEleR);
-    } else newEle = newEleR;
+    } else {
+      newEle = newEleR;
+    }
 
     return newEle;
   }
 
   function createNodeBR(node: any, xmlDoc: any): any {
-    var newEle;
+    let newEle;
 
-    var newEleR = xmlDoc.createElement("w:r");
-    var eleBR = xmlDoc.createElement("w:br");
+    const newEleR = xmlDoc.createElement("w:r");
+    const eleBR = xmlDoc.createElement("w:br");
     newEleR.appendChild(eleBR);
 
     if (
@@ -347,80 +384,90 @@ export function generateDocx(doc: any) {
     ) {
       newEle = xmlDoc.createElement("w:p");
       newEle.appendChild(newEleR);
-    } else newEle = newEleR;
+    } else {
+      newEle = newEleR;
+    }
 
     return newEle;
   }
 
   function createHiperlinkNode(node: any, xmlDoc: any, numLinkParam: any): any {
-    for (var j = 0; j < node.childNodes.length; j++) {
+    for (let j = 0; j < node.childNodes.length; j++) {
       if (node.childNodes[j].nodeName === "IMG") {
-        var nR = xmlDoc.createElement("w:r");
-        var nT = xmlDoc.createElement("w:t");
+        const nR = xmlDoc.createElement("w:r");
+        const nT = xmlDoc.createElement("w:t");
         nT.setAttribute("xml:space", "preserve");
-        var t = xmlDoc.createTextNode("link format not available");
+        const t = xmlDoc.createTextNode("link format not available");
         nR.appendChild(nT);
         nT.appendChild(t);
 
         if (node.parentNode.nodeName === "BODY") {
-          var p = xmlDoc.createElement("w:p");
+          const p = xmlDoc.createElement("w:p");
           p.appendChild(nR);
           return p;
-        } else return nR;
+        } else {
+          return nR;
+        }
       }
     }
 
-    var hiperEle = xmlDoc.createElement("w:hyperlink");
+    const hyperlinkElement = xmlDoc.createElement("w:hyperlink");
+
     if (node.href) {
-      hiperEle.setAttribute("r:id", "link" + numLinkParam);
+      hyperlinkElement.setAttribute("r:id", "link" + numLinkParam);
     }
 
-    var newEle;
+    let newEle;
+
     if (
       node.parentNode.nodeName === "BODY" ||
       node.parentNode.nodeName === "TD"
     ) {
       newEle = xmlDoc.createElement("w:p");
-      newEle.appendChild(hiperEle);
-    } else newEle = hiperEle;
+      newEle.appendChild(hyperlinkElement);
+    } else {
+      newEle = hyperlinkElement;
+    }
 
     return newEle;
   }
 
   function createNodeLi(
-    node: any,
     xmlDoc: any,
     countListParam: any,
     itemsListParam: any
   ): any {
-    var newEle = xmlDoc.createElement("w:p");
-    var pr = xmlDoc.createElement("w:pPr");
-    var rstyle = xmlDoc.createElement("w:pStyle");
+    const newEle = xmlDoc.createElement("w:p");
+    const pr = xmlDoc.createElement("w:pPr");
+    const rstyle = xmlDoc.createElement("w:pStyle");
     rstyle.setAttribute("w:val", "ListParagraph");
 
     pr.appendChild(rstyle);
     newEle.appendChild(pr);
 
-    var numpr = xmlDoc.createElement("w:numPr");
-    var wilvl = xmlDoc.createElement("w:ilvl");
-    wilvl.setAttribute("w:val", itemsListParam);
-    var numId = xmlDoc.createElement("w:numId");
-    numId.setAttribute("w:val", countListParam);
+    const numPrElement = xmlDoc.createElement("w:numPr");
+    const ilvlElement = xmlDoc.createElement("w:ilvl");
+    ilvlElement.setAttribute("w:val", itemsListParam);
+    const numIdElement = xmlDoc.createElement("w:numId");
+    numIdElement.setAttribute("w:val", countListParam);
 
-    numpr.appendChild(wilvl);
-    numpr.appendChild(numId);
+    numPrElement.appendChild(ilvlElement);
+    numPrElement.appendChild(numIdElement);
 
-    pr.appendChild(numpr);
+    pr.appendChild(numPrElement);
 
     return newEle;
   }
 
   function createNodeParagraphOrRun(node: any, xmlDoc: any): any {
-    var tx = node.data;
+    let tx = node.data;
 
-    if (!tx) tx = "";
+    if (!tx) {
+      tx = "";
+    }
 
-    var newEle;
+    let newEle;
+
     if (
       node.parentNode.nodeName === "BODY" ||
       node.parentNode.nodeName === "TD"
@@ -435,50 +482,56 @@ export function generateDocx(doc: any) {
   }
 
   function createMyTextNode(node: any, xmlDoc: any): any {
-    var tx = node.data;
+    let tx = node.data;
 
-    if (!tx) tx = "";
+    if (!tx) {
+      tx = "";
+    }
 
     if (
       node.parentNode.nodeName === "TR" ||
       node.parentNode.nodeName === "TABLE"
-    )
+    ) {
       return xmlDoc.createElement("w:Noinsert");
-    else if (node.parentNode.nodeName === "BODY" && !node.data.trim())
+    } else if (node.parentNode.nodeName === "BODY" && !node.data.trim()) {
       return xmlDoc.createElement("w:Noinsert");
+    }
 
-    var newEleR = xmlDoc.createElement("w:r");
+    const newEleR = xmlDoc.createElement("w:r");
 
     if (orientationRTL) {
-      var elerPr = xmlDoc.createElement("w:rPr");
-      var rtlNode = xmlDoc.createElement("w:rtl");
+      const rPrElement = xmlDoc.createElement("w:rPr");
+      const rtlNode = xmlDoc.createElement("w:rtl");
       rtlNode.setAttribute("w:val", "1");
-      elerPr.appendChild(rtlNode);
+      rPrElement.appendChild(rtlNode);
 
-      newEleR.appendChild(elerPr);
+      newEleR.appendChild(rPrElement);
     }
 
     if (node.parentNode.nodeName === "A" && node.parentNode.href) {
-      var nodeStyleLink = xmlDoc.createElement("w:rStyle");
+      const nodeStyleLink = xmlDoc.createElement("w:rStyle");
       nodeStyleLink.setAttribute("w:val", "Hyperlink");
       newEleR.appendChild(nodeStyleLink);
     }
 
-    var nodetext = xmlDoc.createElement("w:t");
-    nodetext.setAttribute("xml:space", "preserve");
-    var texto = xmlDoc.createTextNode(tx);
+    const textNode = xmlDoc.createElement("w:t");
+    textNode.setAttribute("xml:space", "preserve");
+    const textContent = xmlDoc.createTextNode(tx);
 
-    newEleR.appendChild(nodetext);
-    nodetext.appendChild(texto);
+    newEleR.appendChild(textNode);
+    textNode.appendChild(textContent);
 
-    var newEle;
+    let newEle;
+
     if (
       node.parentNode.nodeName === "BODY" ||
       node.parentNode.nodeName === "TD"
     ) {
       newEle = xmlDoc.createElement("w:p");
       newEle.appendChild(newEleR);
-    } else newEle = newEleR;
+    } else {
+      newEle = newEleR;
+    }
 
     return newEle;
   }
@@ -667,184 +720,14 @@ export function generateDocx(doc: any) {
     return resultNumIdString;
   }
 
-  function escalarIMG(
-    imgwidth: number,
-    imgheight: number
-  ): { width: number; height: number } {
-    var dimensionIMG = { width: 0, height: 0 };
-
-    var width_inch = imgwidth / 96;
-    var height_inch = imgheight / 96;
-
-    var width_emu = width_inch * 914400;
-    var height_emu = height_inch * 914400;
-
-    var pgSzW = 16 * 360000;
-    var pgSzH = 24.7 * 360000;
-
-    if (width_emu > pgSzW) {
-      var originalW = width_emu;
-      width_emu = pgSzW;
-      height_emu = Math.floor((width_emu * height_emu) / originalW);
-    }
-
-    if (height_emu > pgSzH) {
-      var originalH = height_emu;
-      height_emu = pgSzH;
-      width_emu = Math.floor((height_emu * width_emu) / originalH);
-    }
-
-    dimensionIMG.width = Math.floor(width_emu);
-    dimensionIMG.height = Math.floor(height_emu);
-
-    return dimensionIMG;
-  }
-
-  function nodeVoid(xmlDoc: any): any {
-    var newEle = xmlDoc.createElement("w:r");
-    var nodetext = xmlDoc.createElement("w:t");
-    nodetext.setAttribute("xml:space", "preserve");
-    var texto = xmlDoc.createTextNode("IMAGE FORMAT NOT AVAILABLE!");
-
-    newEle.appendChild(nodetext);
-    nodetext.appendChild(texto);
-
-    return newEle;
-  }
-
-  function createDrawingNodeIMG(
-    node: any,
-    dataImg: string,
-    xmlDoc: any,
-    numImgParam: number
-  ): any {
-    var format = ".png";
-    var nameFile = "image" + numImgParam + format;
-
-    var relashionImg = "rId" + numImgParam;
-
-    var img = document.createElement("img");
-    img.src = dataImg;
-    img.width = node.width;
-    img.height = node.height;
-
-    var dimensionImg = escalarIMG(img.width, img.height);
-
-    var newEleImage = xmlDoc.createElement("w:r");
-
-    var drawEle = xmlDoc.createElement("w:drawing");
-    var wpinline = xmlDoc.createElement("wp:inline");
-    wpinline.setAttribute("distR", "0");
-    wpinline.setAttribute("distL", "0");
-    wpinline.setAttribute("distB", "0");
-    wpinline.setAttribute("distT", "0");
-    var wpextent = xmlDoc.createElement("wp:extent");
-    wpextent.setAttribute("cy", String(dimensionImg.height));
-    wpextent.setAttribute("cx", String(dimensionImg.width));
-    var wpeffectExtent = xmlDoc.createElement("wp:effectExtent");
-    wpeffectExtent.setAttribute("b", "0");
-    wpeffectExtent.setAttribute("r", "0");
-    wpeffectExtent.setAttribute("t", "0");
-    wpeffectExtent.setAttribute("l", "0");
-    var wpdocPr = xmlDoc.createElement("wp:docPr");
-    wpdocPr.setAttribute("name", nameFile);
-    wpdocPr.setAttribute("id", String(numImgParam));
-
-    var wpcNvGraphicFramePr = xmlDoc.createElement("wp:cNvGraphicFramePr");
-    var childcNvGraphicFramePr = xmlDoc.createElement("a:graphicFrameLocks");
-    childcNvGraphicFramePr.setAttribute(
-      "xmlns:a",
-      "http://schemas.openxmlformats.org/drawingml/2006/main"
-    );
-    childcNvGraphicFramePr.setAttribute("noChangeAspect", "1");
-
-    wpcNvGraphicFramePr.appendChild(childcNvGraphicFramePr);
-
-    var agraphic = xmlDoc.createElement("a:graphic");
-    agraphic.setAttribute(
-      "xmlns:a",
-      "http://schemas.openxmlformats.org/drawingml/2006/main"
-    );
-    var agraphicdata = xmlDoc.createElement("a:graphicData");
-    agraphicdata.setAttribute(
-      "uri",
-      "http://schemas.openxmlformats.org/drawingml/2006/picture"
-    );
-    var pic = xmlDoc.createElement("pic:pic");
-    pic.setAttribute(
-      "xmlns:pic",
-      "http://schemas.openxmlformats.org/drawingml/2006/picture"
-    );
-    var picnvPicPr = xmlDoc.createElement("pic:nvPicPr");
-    var piccNvPr = xmlDoc.createElement("pic:cNvPr");
-    piccNvPr.setAttribute("name", nameFile);
-    piccNvPr.setAttribute("id", String(numImgParam));
-    var piccNvPicPr = xmlDoc.createElement("pic:cNvPicPr");
-    picnvPicPr.appendChild(piccNvPr);
-    picnvPicPr.appendChild(piccNvPicPr);
-
-    var picblipFill = xmlDoc.createElement("pic:blipFill");
-    var ablip = xmlDoc.createElement("a:blip");
-    ablip.setAttribute("cstate", "print");
-    ablip.setAttribute("r:embed", relashionImg);
-    var astretch = xmlDoc.createElement("a:stretch");
-    var afillRect = xmlDoc.createElement("a:fillRect");
-    astretch.appendChild(afillRect);
-
-    picblipFill.appendChild(ablip);
-    picblipFill.appendChild(astretch);
-
-    var picspPr = xmlDoc.createElement("pic:spPr");
-    var axfrm = xmlDoc.createElement("a:xfrm");
-    var aoff = xmlDoc.createElement("a:off");
-    aoff.setAttribute("y", "0");
-    aoff.setAttribute("x", "0");
-    var aext = xmlDoc.createElement("a:ext");
-    aext.setAttribute("cy", String(dimensionImg.height));
-    aext.setAttribute("cx", String(dimensionImg.width));
-    axfrm.appendChild(aoff);
-    axfrm.appendChild(aext);
-
-    var aprstGeom = xmlDoc.createElement("a:prstGeom");
-    aprstGeom.setAttribute("prst", "rect");
-    var aavLst = xmlDoc.createElement("a:avLst");
-    aprstGeom.appendChild(aavLst);
-
-    picspPr.appendChild(axfrm);
-    picspPr.appendChild(aprstGeom);
-
-    pic.appendChild(picnvPicPr);
-    pic.appendChild(picblipFill);
-    pic.appendChild(picspPr);
-
-    agraphicdata.appendChild(pic);
-
-    agraphic.appendChild(agraphicdata);
-
-    wpinline.appendChild(wpextent);
-    wpinline.appendChild(wpeffectExtent);
-    wpinline.appendChild(wpdocPr);
-    wpinline.appendChild(wpcNvGraphicFramePr);
-    wpinline.appendChild(agraphic);
-
-    drawEle.appendChild(wpinline);
-
-    newEleImage.appendChild(drawEle);
-
-    return newEleImage;
-  }
-  function stringStartsWith(str: string, prefix: string): boolean {
-    return str.slice(0, prefix.length) == prefix;
-  }
-
   function createDocx(XmlDocumentDocx: string, zipParam: JSZip): void {
-    var relationShips =
+    const relationShips =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
       "</Relationships>";
 
-    var contentTypes =
+    const contentTypes =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
       '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
@@ -856,12 +739,12 @@ export function generateDocx(doc: any) {
       '<Override ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml" PartName="/word/numbering.xml"/>' +
       "</Types>";
 
-    var head_docx =
+    const head_docx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 wp14">';
 
-    var footer = "</w:document>";
+    const footer = "</w:document>";
 
-    var estilos = `
+    const styles = `
 		  <w:styles xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" mc:Ignorable="w14 w15 wp14">
 		<w:style w:type="paragraph" w:styleId="Heading1">
 			<w:name w:val="Heading 1"/>
@@ -1018,19 +901,19 @@ export function generateDocx(doc: any) {
 		</w:styles>
 		`;
 
-    var cabeceraNumbering =
+    const numberingHeader =
       '<?xml version="1.0" encoding="utf-8"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">';
-    var footerNumbering = "</w:numbering>";
+    const numberingFooter = "</w:numbering>";
 
     let finalNumberingString =
-      cabeceraNumbering + numberingString + numIdString + footerNumbering;
+      numberingHeader + numberingString + numIdString + numberingFooter;
 
     zipParam.file("_rels/.rels", relationShips);
     zipParam.file("[Content_Types].xml", contentTypes);
     let finalXmlDocumentDocx = head_docx + XmlDocumentDocx + footer;
 
     zipParam.file("word/document.xml", finalXmlDocumentDocx);
-    zipParam.file("word/styles.xml", estilos);
+    zipParam.file("word/styles.xml", styles);
     zipParam.file("word/numbering.xml", finalNumberingString);
 
     zipParam.generateAsync({ type: "blob" }).then(function (content: any) {
@@ -1038,14 +921,14 @@ export function generateDocx(doc: any) {
     });
   }
 
-  function parseHTMLtoDocx(node: any, xmlDoc: any, padreXML: any): any {
-    var encabezados = ["H1", "H2", "H3", "H4", "H5", "H6"];
-    var newEle: any;
+  function parseHTMLtoDocx(node: any, xmlDoc: any): any {
+    const headings = ["H1", "H2", "H3", "H4", "H5", "H6"];
+    let newEle: any;
 
     if (node.nodeName === "BODY") {
       newEle = xmlDoc.createElement("w:body");
-    } else if (encabezados.indexOf(node.nodeName) >= 0) {
-      var pos = encabezados.indexOf(node.nodeName) + 1;
+    } else if (headings.indexOf(node.nodeName) >= 0) {
+      const pos = headings.indexOf(node.nodeName) + 1;
       newEle = createHeading(node, xmlDoc, pos);
     } else if (node.nodeName === "P") {
       newEle = createNodeParagraphOrRun(node, xmlDoc);
@@ -1057,7 +940,7 @@ export function generateDocx(doc: any) {
       newEle = createNodeBR(node, xmlDoc);
     } else if (node.nodeName === "A") {
       if (node.href) {
-        var idLink = "link" + numLink;
+        const idLink = "link" + linkCounter;
         relsDocumentXML =
           relsDocumentXML +
           '<Relationship Id="' +
@@ -1066,101 +949,78 @@ export function generateDocx(doc: any) {
           node.href +
           '" TargetMode="External"/>';
 
-        newEle = createHiperlinkNode(node, xmlDoc, numLink);
+        newEle = createHiperlinkNode(node, xmlDoc, linkCounter);
 
-        numLink++;
-      } else newEle = createNodeParagraphOrRun(node, xmlDoc);
+        linkCounter++;
+      } else {
+        newEle = createNodeParagraphOrRun(node, xmlDoc);
+      }
     } else if (node.nodeName === "UL" || node.nodeName === "OL") {
-      if (node.parentNode.nodeName != "LI") countList++;
+      if (node.parentNode.nodeName != "LI") {
+        listCounter++;
+      }
 
-      if (node.nodeName === "UL")
+      if (node.nodeName === "UL") {
         numberingString = createAbstractNumListBullet(
           numberingString,
-          countList
+          listCounter
         );
-      else if (node.nodeName === "OL")
+      } else if (node.nodeName === "OL") {
         numberingString = createAbstractNumListDecimal(
           numberingString,
-          countList
+          listCounter
         );
+      }
 
-      numIdString = createNumIdList(numIdString, countList);
+      numIdString = createNumIdList(numIdString, listCounter);
 
       newEle = xmlDoc.createElement("w:Noinsert");
     } else if (node.nodeName === "LI") {
-      var levelList = 0;
-      var granFather = node.parentNode.parentNode;
+      let levelList = 0;
+      let grandparentNode = node.parentNode.parentNode;
 
-      if (granFather) {
-        var abu = true;
+      if (grandparentNode) {
+        let isGrandparentLI = true;
 
-        while (abu && granFather.nodeName === "LI") {
+        while (isGrandparentLI && grandparentNode.nodeName === "LI") {
           levelList++;
 
-          if (granFather.parentNode.parentNode) {
-            abu = true;
-            granFather = granFather.parentNode.parentNode;
-          } else abu = false;
+          if (grandparentNode.parentNode.parentNode) {
+            isGrandparentLI = true;
+            grandparentNode = grandparentNode.parentNode.parentNode;
+          } else {
+            isGrandparentLI = false;
+          }
         }
       }
 
-      newEle = createNodeLi(node, xmlDoc, countList, levelList);
+      newEle = createNodeLi(xmlDoc, listCounter, levelList);
     } else if (node.nodeName === "#text") {
       newEle = createMyTextNode(node, xmlDoc);
     } else if (node.nodeName === "IMG") {
-      var format = ".png";
-      var nameFile = "image" + numImg + format;
-      var relashionImg = "rId" + numImg;
-      var imgEle;
-
-      var dataImg = node.attributes[0].value;
-
-      if (!stringStartsWith(dataImg, "data:")) {
-        imgEle = nodeVoid(xmlDoc);
-      } else {
-        var srcImg = dataImg.replace(/^data:image\/.+;base64,/, " ");
-        zip.file("word/media/" + nameFile, srcImg, { base64: true });
-
-        relsDocumentXML =
-          relsDocumentXML +
-          '<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/' +
-          nameFile +
-          '" Id="' +
-          relashionImg +
-          '" />';
-
-        imgEle = createDrawingNodeIMG(node, dataImg, xmlDoc, numImg);
-
-        numImg++;
-      }
-
-      if (
-        node.parentNode.nodeName === "BODY" ||
-        node.parentNode.nodeName === "TD"
-      ) {
-        newEle = xmlDoc.createElement("w:p");
-        newEle.appendChild(imgEle);
-      } else newEle = imgEle;
+      newEle = xmlDoc.createElement("w:Noinsert");
     } else if (node.nodeName === "TABLE") {
-      newEle = createTableNode(node, xmlDoc);
+      newEle = createTableNode(xmlDoc);
     } else if (node.nodeName === "THEAD") {
       newEle = xmlDoc.createElement("w:Noinsert");
     } else if (node.nodeName === "TBODY") {
       newEle = xmlDoc.createElement("w:Noinsert");
     } else if (node.nodeName === "TR") {
-      newEle = createNodeTR(node, xmlDoc);
+      newEle = createNodeTR(xmlDoc);
       cols = 0;
-      for (var c = 0; c < node.childNodes.length; c++) {
-        if (node.childNodes[c].nodeName === "TD") cols++;
+      for (let c = 0; c < node.childNodes.length; c++) {
+        if (node.childNodes[c].nodeName === "TD") {
+          cols++;
+        }
       }
       if (cols == 0) {
-        var eleTD = document.createElement("TD");
-        node.appendChild(eleTD);
+        const tdElement = document.createElement("TD");
+        node.appendChild(tdElement);
       }
     } else if (node.nodeName === "TD") {
       newEle = createNodeTD(node, xmlDoc, cols);
     } else if (node.nodeName === "BLOCKQUOTE") {
-      newEle = createNodeBlockquote(node, xmlDoc);
+      newEle = createNodeBlockquote(xmlDoc);
     } else {
       newEle = createNodeParagraphOrRun(node, xmlDoc);
     }
@@ -1168,7 +1028,7 @@ export function generateDocx(doc: any) {
     return newEle;
   }
 
-  createNodeXML(nodeParent[0], xmlDoc, padreXML);
+  createNodeXML(nodeParent[0], xmlDoc, parentXML);
 
   relsDocumentXML =
     relsDocumentXML +
@@ -1177,19 +1037,19 @@ export function generateDocx(doc: any) {
 
   zip.file("word/_rels/document.xml.rels", relsDocumentXML);
 
-  var bodyElement = xmlDoc.getElementsByTagName("w:body")[0];
+  const bodyElement = xmlDoc.getElementsByTagName("w:body")[0];
 
   const wordProcessingMLNamespace =
     "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
-  var sectPr = xmlDoc.createElementNS(wordProcessingMLNamespace, "w:sectPr");
-  var pgSz = xmlDoc.createElementNS(wordProcessingMLNamespace, "w:pgSz");
+  const sectPr = xmlDoc.createElementNS(wordProcessingMLNamespace, "w:sectPr");
+  const pgSz = xmlDoc.createElementNS(wordProcessingMLNamespace, "w:pgSz");
   pgSz.setAttribute("w:w", "14003"); // 24.7cm in twips, for landscape
   pgSz.setAttribute("w:h", "9071"); // 16cm in twips, for landscape
   pgSz.setAttribute("w:orient", "landscape");
   sectPr.appendChild(pgSz);
 
-  var pgMar = xmlDoc.createElementNS(wordProcessingMLNamespace, "w:pgMar");
+  const pgMar = xmlDoc.createElementNS(wordProcessingMLNamespace, "w:pgMar");
   pgMar.setAttribute("w:top", "720"); // 0.5 inch
   pgMar.setAttribute("w:right", "720");
   pgMar.setAttribute("w:bottom", "720");
@@ -1201,7 +1061,7 @@ export function generateDocx(doc: any) {
 
   bodyElement.appendChild(sectPr);
 
-  var content = createDocx(bodyElement.outerHTML, zip);
+  const content = createDocx(bodyElement.outerHTML, zip);
 
   return content;
 }
